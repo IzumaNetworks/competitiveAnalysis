@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+touchfile="${HOME}/first_time_test_done"
 # First-time setup
 first_time_test() {
     sudo swapoff -a
@@ -8,10 +8,13 @@ first_time_test() {
     sudo systemctl enable ssh
     sudo sed -i 's/^\(CONF_SWAPSIZE=\).*/\10/' /etc/dphys-swapfile
     sudo sed -i 's/$/ cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory/' /boot/firmware/cmdline.txt
-    sudo touch /var/run/first_time_test_done
-}
-#!/bin/bash
+    sudo groupadd k3s-users
+    sudo chown root:k3s-users /etc/rancher/k3s/k3s.yaml
+    sudo chmod 640 /etc/rancher/k3s/k3s.yaml
+    sudo usermod -aG k3s-users ${USER}
 
+    sudo touch ${touchfile}
+}
 # Function to get the IP address of the physical network interface
 get_physical_ip() {
     physical_ip=$(ip -o -4 addr show eth0 | awk '{print $4}' | cut -d/ -f1)
@@ -28,7 +31,10 @@ second_go() {
 }
 
 # Check if first-time setup is needed
-if [[ ! -f /var/run/first_time_test_done ]]; then
+echo "Checking if first-time setup is needed..."
+echo "file: $touchfile"
+ls -l $touchfile
+if [[ ! -f $touchfile ]]; then
     echo "Running first-time setup..."
     first_time_test
     sudo reboot

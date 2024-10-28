@@ -1,83 +1,104 @@
 import psutil
 import time
 import numpy as np
+import csv
+import io
 
-# Monitoring duration in seconds
-monitor_duration = 300  # 5 minutes
-monitor_interval = 1    # 1 second intervals
+def monitor_cpu_memory(duration=300):
+    cpu_usage = []
+    memory_usage = []
 
-# Get total memory in MB
-total_memory_mb = psutil.virtual_memory().total / (1024 * 1024)
+    print(f"Monitoring system for {duration // 60} minutes...\n")
 
-# Initialize lists for storing CPU and memory usage
-cpu_usage = []
-memory_usage = []
-
-# For tracking top processes during monitoring
-process_cpu_usage = []
-process_memory_usage = []
-
-print("Monitoring system for 5 minutes...")
-
-# Monitor for the duration
-for _ in range(monitor_duration):
-    cpu_usage.append(psutil.cpu_percent())
-    memory_info = psutil.virtual_memory()
-    memory_usage.append(memory_info.percent)
-
-    # Capture all current processes
-    process_list = []
-    for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
-        process_list.append(proc.info)
+    for _ in range(duration):
+        cpu_usage.append(psutil.cpu_percent(interval=1))
+        memory_info = psutil.virtual_memory()
+        memory_usage.append(memory_info.percent)
     
-    process_cpu_usage.append(sorted(process_list, key=lambda p: p['cpu_percent'], reverse=True)[:10])
-    process_memory_usage.append(sorted(process_list, key=lambda p: p['memory_percent'], reverse=True)[:10])
+    max_cpu = np.max(cpu_usage)
+    min_cpu = np.min(cpu_usage)
+    avg_cpu = np.mean(cpu_usage)
+    median_cpu = np.median(cpu_usage)
+    
+    max_memory = np.max(memory_usage)
+    min_memory = np.min(memory_usage)
+    avg_memory = np.mean(memory_usage)
+    median_memory = np.median(memory_usage)
 
-    time.sleep(monitor_interval)
+    total_memory = memory_info.total / (1024 ** 2)  # Convert to MB
 
-# Calculating CPU and Memory Stats
-cpu_max = max(cpu_usage)
-cpu_min = min(cpu_usage)
-cpu_avg = np.mean(cpu_usage)
-cpu_median = np.median(cpu_usage)
+    print(f"CPU Usage over 5 minutes:")
+    print(f"Max CPU: {max_cpu:.1f}%")
+    print(f"Min CPU: {min_cpu:.1f}%")
+    print(f"Average CPU: {avg_cpu:.1f}%")
+    print(f"Median CPU: {median_cpu:.1f}%\n")
+    
+    print(f"Memory Usage over 5 minutes:")
+    print(f"Max Memory: {max_memory:.1f}% ({max_memory * total_memory / 100:.2f} MB)")
+    print(f"Min Memory: {min_memory:.1f}% ({min_memory * total_memory / 100:.2f} MB)")
+    print(f"Average Memory: {avg_memory:.1f}% ({avg_memory * total_memory / 100:.2f} MB)")
+    print(f"Median Memory: {median_memory:.1f}% ({median_memory * total_memory / 100:.2f} MB)\n")
 
-memory_max = max(memory_usage)
-memory_min = min(memory_usage)
-memory_avg = np.mean(memory_usage)
-memory_median = np.median(memory_usage)
+    # Top 10 Memory-consuming processes
+    processes_memory = [(proc.info['pid'], proc.info['name'], proc.info['memory_percent']) 
+                        for proc in psutil.process_iter(['pid', 'name', 'memory_percent'])]
+    processes_memory = sorted(processes_memory, key=lambda p: p[2], reverse=True)[:10]
 
-memory_max_mb = (memory_max / 100) * total_memory_mb
-memory_min_mb = (memory_min / 100) * total_memory_mb
-memory_avg_mb = (memory_avg / 100) * total_memory_mb
-memory_median_mb = (memory_median / 100) * total_memory_mb
+    print(f"Top 10 memory-consuming processes (Memory % and MB):")
+    for pid, name, memory_percent in processes_memory:
+        memory_used_mb = memory_percent * total_memory / 100
+        print(f"{name} (PID: {pid}) - Memory: {memory_percent:.1f}% ({memory_used_mb:.2f} MB)")
 
-# Print CPU and Memory Stats
-print("\nCPU Usage over 5 minutes:")
-print(f"Max CPU: {cpu_max}%")
-print(f"Min CPU: {cpu_min}%")
-print(f"Average CPU: {cpu_avg}%")
-print(f"Median CPU: {cpu_median}%")
+    # Top 10 CPU-consuming processes
+    processes_cpu = [(proc.info['pid'], proc.info['name'], proc.info['cpu_percent']) 
+                     for proc in psutil.process_iter(['pid', 'name', 'cpu_percent'])]
+    processes_cpu = sorted(processes_cpu, key=lambda p: p[2], reverse=True)[:10]
 
-print("\nMemory Usage over 5 minutes:")
-print(f"Max Memory: {memory_max}% ({memory_max_mb:.2f} MB)")
-print(f"Min Memory: {memory_min}% ({memory_min_mb:.2f} MB)")
-print(f"Average Memory: {memory_avg}% ({memory_avg_mb:.2f} MB)")
-print(f"Median Memory: {memory_median}% ({memory_median_mb:.2f} MB)")
+    print(f"\nTop 10 CPU-consuming processes:")
+    for pid, name, cpu_percent in processes_cpu:
+        print(f"{name} (PID: {pid}) - CPU: {cpu_percent:.1f}%")
 
-# Function to get the median and max for a process
-def get_process_stats(process_usage, key):
-    median = np.median([p[key] for p in process_usage])
-    maximum = max([p[key] for p in process_usage])
-    return median, maximum
+    # Disk storage usage
+    disk_usage = psutil.disk_usage('/')
+    disk_total_gb = disk_usage.total / (1024 ** 3)
+    disk_used_gb = disk_usage.used / (1024 ** 3)
+    disk_free_gb = disk_usage.free / (1024 ** 3)
+    disk_percent = disk_usage.percent
 
-# Calculate top 10 memory-consuming processes
-print("\nTop 10 memory-consuming processes (Memory % and MB):")
-for i, proc in enumerate(process_memory_usage[-1]):
-    memory_mb = (proc['memory_percent'] / 100) * total_memory_mb
-    print(f"{i + 1}. {proc['name']} (PID: {proc['pid']}) - Memory: {proc['memory_percent']}% ({memory_mb:.2f} MB)")
+    print(f"\nDisk Storage Information:")
+    print(f"Total Disk Space: {disk_total_gb:.2f} GB")
+    print(f"Used Disk Space: {disk_used_gb:.2f} GB")
+    print(f"Available Disk Space: {disk_free_gb:.2f} GB")
+    print(f"Disk Usage: {disk_percent:.1f}%\n")
 
-# Calculate top 10 CPU-consuming processes
-print("\nTop 10 CPU-consuming processes:")
-for i, proc in enumerate(process_cpu_usage[-1]):
-    print(f"{i + 1}. {proc['name']} (PID: {proc['pid']}) - CPU: {proc['cpu_percent']}%")
+    # Prepare CSV output
+    csv_output = io.StringIO()
+    writer = csv.writer(csv_output)
 
+    # Write headers
+    writer.writerow(['Max CPU (%)', 'Min CPU (%)', 'Avg CPU (%)', 'Median CPU (%)', 
+                     'Max Memory (%)', 'Min Memory (%)', 'Avg Memory (%)', 'Median Memory (%)', 
+                     'Total Memory (MB)', 'Disk Total (GB)', 'Disk Used (GB)', 'Disk Free (GB)', 'Disk Usage (%)'])
+    writer.writerow([f"{max_cpu:.1f}", f"{min_cpu:.1f}", f"{avg_cpu:.1f}", f"{median_cpu:.1f}", 
+                     f"{max_memory:.1f}", f"{min_memory:.1f}", f"{avg_memory:.1f}", f"{median_memory:.1f}", 
+                     f"{total_memory:.1f}", f"{disk_total_gb:.2f}", f"{disk_used_gb:.2f}", f"{disk_free_gb:.2f}", f"{disk_percent:.1f}"])
+
+    # Add top 10 memory-consuming processes to CSV
+    writer.writerow([])
+    writer.writerow(['Top 10 Memory-consuming Processes', 'PID', 'Memory (%)', 'Memory (MB)'])
+    for pid, name, memory_percent in processes_memory:
+        memory_used_mb = memory_percent * total_memory / 100
+        writer.writerow([name, pid, f"{memory_percent:.1f}", f"{memory_used_mb:.2f}"])
+
+    # Add top 10 CPU-consuming processes to CSV
+    writer.writerow([])
+    writer.writerow(['Top 10 CPU-consuming Processes', 'PID', 'CPU (%)'])
+    for pid, name, cpu_percent in processes_cpu:
+        writer.writerow([name, pid, f"{cpu_percent:.1f}"])
+
+    # Print CSV to screen (at the end)
+    print("\nCSV Output:\n")
+    print(csv_output.getvalue())
+
+if __name__ == "__main__":
+    monitor_cpu_memory()
