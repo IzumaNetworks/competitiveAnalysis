@@ -37,6 +37,7 @@ Up front, I will provide the results of the test.  This was conducted head to he
 | Survive IP address change                    |    :x:    | :white_check_mark: |
 | Operate behind a simple firewall             |    :x:    | :white_check_mark: |
 | Operate behind a complex firewall            |    :x:    | :white_check_mark: |
+| time kubectl get nodes fastest/slowest       | 1m13.210s / 1m31.043s |  .221s / .392s          |
 
 * Izuma Edge Yocto OS always contains the Edge Software.  TODO: build without Izuma Edge
 
@@ -643,27 +644,26 @@ run kubectl get nodes
 
 ```bash
 travis@raspberrypi:~ $ time kubectl get nodes
-NAME          STATUS   ROLES                  AGE   VERSION
-raspberrypi   Ready    control-plane,master   12m   v1.30.5+k3s1
+NAME          STATUS   ROLES                  AGE     VERSION
+raspberrypi   Ready    control-plane,master   4d23h   v1.30.5+k3s1
 
-real	0m11.901s
-user	0m0.793s
-sys	0m0.645s
+real	1m13.210s
+user	0m1.078s
+sys	0m1.266s
 travis@raspberrypi:~ $ time kubectl get nodes
-NAME          STATUS   ROLES                  AGE   VERSION
-raspberrypi   Ready    control-plane,master   12m   v1.30.5+k3s1
+NAME          STATUS   ROLES                  AGE     VERSION
+raspberrypi   Ready    control-plane,master   4d23h   v1.30.5+k3s1
 
-real	0m6.275s
-user	0m0.683s
-sys	0m0.579s
+real	1m31.043s
+user	0m1.150s
+sys	0m1.510s
 travis@raspberrypi:~ $ time kubectl get nodes
-NAME          STATUS   ROLES                  AGE   VERSION
-raspberrypi   Ready    control-plane,master   13m   v1.30.5+k3s1
+NAME          STATUS   ROLES                  AGE     VERSION
+raspberrypi   Ready    control-plane,master   4d23h   v1.30.5+k3s1
 
-real	0m36.072s
-user	0m0.993s
-sys	0m1.048s
-travis@raspberrypi:~ $
+real	1m14.426s
+user	0m1.078s
+sys	0m1.578s
 ```
 
 ### Izuma Edge
