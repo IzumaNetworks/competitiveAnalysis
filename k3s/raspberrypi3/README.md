@@ -1,8 +1,8 @@
-# K3s on RPI B4+
+# K3s on RPI 3B+
 
 # prereq
 
-- Install PIos with with the (pi OS installer)[https://www.raspberrypi.com/software/]
+- Install PIos with with the [pi OS installer](https://www.raspberrypi.com/software/)
   - choose: Raspberry PI OS Other -> PI OS Lite (64)
   - burn to an SD card
 - Get ssh access working.  PI os is annoying in that you need a monitor and keyboard first...
@@ -18,26 +18,26 @@
 
 # Results
 
-Up front, I will provide the results of the test.  This was conducted head to head with like Raspberry PI 3b+ machines, which is a constrained device with a process and memory that you would typically find in a modern building controller, car head unit, or dedicated processor environement.  For reach test conducted, you will find in the test section above.
+Up front, I will provide the results of the test.  This was conducted head to head with like Raspberry PI 3b+ machines, which is a constrained device with a process and memory that you would typically find in a modern building controller, car head unit, or dedicated processor environment.  For reach test conducted, you will find in the test section above.
 
 
-| Description                                  |    k3s    |     Izuma Edge     |
-| :--------------------------------------------- | :---------: | :------------------: |
-| System starting memory (hardware)            |  1028MB  |       1028MB       |
-| Boot time (cold start)                       |    38s    |        26s        |
-| Boot time (restart)                          |   2m 8s   |        32s        |
-| Memory avaiable w/o edgeSW (no containers)   |  773 MB    |       741 MB       |
-| Memory available w edgeSW (no containers)    |   232 MB   |       681 MB       |
-| Memory taken up by edgeSW (no containers)    |   501 MB  |       80 MB       |
-| Disk space used w/o edgeSW (no containers)   |  2.3 GB   |       714 MB       |
-| Disk space used w edgeSW (no containers)    |   3.6 GB   |       976 MB       |
-| Disk space taken up by edgeSW (no containers)   | 1.3 GB  |      262 MB        |
-| CPU Idle Min/Max/Avg (5 min capture)             | 1% / 25% / 5% |    .8% / 14.1% / 3.2%    |
-| Memory consumed Idle Min/Max (5 min capture) | 75% / 75% |     31% / 31%     |
-| Survive IP address change                    |    :x:    | :white_check_mark: |
-| Operate behind a simple firewall             |    :x:    | :white_check_mark: |
-| Operate behind a complex firewall            |    :x:    | :white_check_mark: |
-| time kubectl get nodes fastest/slowest       | 1m13.210s / 1m31.043s |  .221s / .392s          |
+| Description                                   |          k3s          |     Izuma Edge     |
+| :---------------------------------------------- | :---------------------: | :------------------: |
+| System starting memory (hardware)             |        1028MB        |       1028MB       |
+| Boot time (cold start)                        |          38s          |        26s        |
+| Boot time (restart)                           |         2m 8s         |        32s        |
+| Memory available w/o edgeSW (no containers)    |        773 MB        |       741 MB       |
+| Memory available w edgeSW (no containers)     |        232 MB        |       681 MB       |
+| Memory taken up by edgeSW (no containers)     |        501 MB        |       80 MB       |
+| Disk space used w/o edgeSW (no containers)    |        2.3 GB        |       714 MB       |
+| Disk space used w edgeSW (no containers)      |        3.6 GB        |       976 MB       |
+| Disk space taken up by edgeSW (no containers) |        1.3 GB        |       262 MB       |
+| CPU Idle Min/Max/Avg (5 min capture)          |     1% / 25% / 5%     | .8% / 14.1% / 3.2% |
+| Memory consumed Idle Min/Max (5 min capture)  |       75% / 75%       |     31% / 31%     |
+| Survive IP address change                     |          :x:          | :white_check_mark: |
+| Operate behind a simple firewall              |          :x:          | :white_check_mark: |
+| Operate behind a complex firewall             |          :x:          | :white_check_mark: |
+| time kubectl get nodes fastest/slowest        | 1m13.210s / 1m31.043s |   .221s / .392s   |
 
 * Izuma Edge Yocto OS always contains the Edge Software.  TODO: build without Izuma Edge
 
@@ -158,12 +158,10 @@ kworker/R-mm_pe,12,0.0
 ```
 
 3. capture a memory footprint with free -h
-travis@raspberrypi:~ $ free -m
-               total        used        free      shared  buff/cache   available
-Mem:             907         134         449           1         375         773
-Swap:            199           0         199
-
-
+   travis@raspberrypi:~ $ free -m
+   total        used        free      shared  buff/cache   available
+   Mem:             907         134         449           1         375         773
+   Swap:            199           0         199
 4. Capture an output of the file system used with the following command
 
 ```bash
@@ -283,7 +281,9 @@ rcu_tasks_trace,11,0.0
 ksoftirqd/0,12,0.0
 rcu_preempt,13,0.0
 ```
+
 5. Capture the memory footprint with free -h
+
 ```bash
 fio@raspberrypi3-64:/$ free -h
                total        used        free      shared  buff/cache   available
@@ -322,7 +322,7 @@ Install the edge software. Measure.
 
 #### k3s
 
-Upload the script `setupk3s.sh` to the target raspberry PI.  Run it.  Note, you need to run it twice as the script sets certain boot prarameters.
+Upload the script `setupk3s.sh` to the target raspberry PI.  Run it.  Note, you need to run it twice as the script sets certain boot parameters.
 
 1. run setupk3s.sh
 2. script will automatically reboot
@@ -409,6 +409,7 @@ kworker/R-mm_pe,12,0.0
 ```
 
 7.. Measure with free -h
+
 ```bash
 total        used        free      shared  buff/cache   available
 Mem:           907Mi       676Mi       151Mi       2.0Mi       131Mi       231Mi
@@ -416,7 +417,8 @@ Swap:             0B          0B          0B
 ```
 
 8. Measure with du -cksh
-``` bash
+
+```bash
 travis@raspberrypi:/ $ sudo du -cksh *
 0	bin
 105M	boot
@@ -578,7 +580,9 @@ rcu_tasks_trace,11,0.0
 ksoftirqd/0,12,0.0
 rcu_preempt,13,0.0
 ```
+
 4. Measure with free -h
+
 ```bash
 fio@raspberrypi3-64:~$ free -h
                total        used        free      shared  buff/cache   available
@@ -587,6 +591,7 @@ Swap:          889Mi          0B       889Mi
 ```
 
 5. Measure with du -cksh *
+
 ```bash
 0	bin
 15M	boot
@@ -608,6 +613,7 @@ Swap:          889Mi          0B       889Mi
 0	tmp
 976M	total
 ```
+
 ## Change the IP address
 
 Machines should support changing / floating ip addresses.  When machines are deployed outside of your network, outside a subnet that you control, the machine software needs to be robust enough to support ip addresses changing; because the machine is out of your physical control.
